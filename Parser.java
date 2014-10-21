@@ -23,24 +23,25 @@ public class Parser {
     //program::=block
     private void program() {
         block();
-    }
+        if( our_stack.empty() == false )
+        {
+            //  donna
+            //System.err.println( "POPPED!");
+            our_stack.pop();    //every time we exit a block
+        }
+        }
 
     //block ::= [declarations] statement_list
     private void block() {
         if( is(TK.VAR) )
         {
             list top = new list();
-            top.block_list.add(tok.string); //start of a new block
+       //     top.block_list.add(tok.string); //start of a new block
             our_stack.push(top);
             declarations();
         }
         statement_list();
-        
-        if( our_stack.empty() == false )
-        {
-            our_stack.pop();    //every time we exit a block
         }
-    }
 
     //declarations::= var {id} rav
     private void declarations() {
@@ -49,6 +50,7 @@ public class Parser {
         //---------------------
         list temp = new list(); //this is a reference to the last one via iterator
         list next;
+        //list newt = new list();
         int size = 0;
         int is_in=0;
         //----------------------
@@ -57,6 +59,8 @@ public class Parser {
         {
             //---------------------- ADDED HERE ---------------------------------------
             is_in = 0;
+          //  newt = our_stack.peek();
+         //   if( newt.block_list.isEmpty() == false)
             
             if( !(our_stack.empty()) ) //if stack isn't empty
             {
@@ -65,6 +69,7 @@ public class Parser {
                 Iterator<list> itr = our_stack.iterator();
                 
                 temp = our_stack.peek();
+               // System.err.println( "Top Stack: "+temp.block_list);
                 
                 if( temp.block_list.contains( tok.string )   )
                 {
@@ -84,14 +89,22 @@ public class Parser {
                     
                     if(is_in == 0)  //if it's not within stack, add the most recent block
                     {
+                       
                         temp.block_list.add(tok.string);
+                        //  donna
+                         //System.err.println( "Things added not w/in stack "+temp.block_list);
                     }
                 }//else()
                 
             }//if() empty stack
+           // else
+           // {
+              //  newt.block_list.add(tok.string);
+              //  list bottom = new list();
+               // bottom.block_list.add(tok.string);
+                //our_stack.push(bottom);
+            //}
 
-            
-            
             
             //----------------------- ENDED HERE --------------------------------
             scan();
@@ -140,8 +153,42 @@ public class Parser {
 //assignment::= id ':=' expression
     private void assignment()
     {
+        list check = new list();
+        int in = 0;
+        
+        // donna
+         //System.err.println( "Goes back to assignment at " + tok.lineNumber);
+        
         if( is(TK.ID) )
         {
+            Iterator<list> it2 = our_stack.iterator();
+
+            while( it2.hasNext() )      //traverse through list from old->new
+            {
+                // donna
+                //list testing = new list();
+                //testing = our_stack.peek();
+                //System.err.println( "In assignment(): "+testing.block_list);
+                check = it2.next();
+                
+                if( check.block_list.contains( tok.string ) )
+                {
+                    in = 1; //True, it's within the stack
+                }
+            }//while()
+            
+            // donna
+              //  System.out.println( "Checking number if " + tok.string + " exists " + in);
+            
+            if(in == 0)
+            {
+                System.err.println( "undeclared variable "+ tok.string +  " on line "+ tok.lineNumber);
+                System.exit(1);
+
+                
+            }//not within, must be undeclared
+
+            
             mustbe(TK.ID);
             //scan();
         }
@@ -153,6 +200,40 @@ public class Parser {
             //scan();
         }
         
+        
+        if( is(TK.ID) )
+        {
+            int z = 0;
+            list checking3 = new list();
+           // donna
+            //  System.err.println( "If this prints, know it's a id!!" + tok.lineNumber);
+            
+            Iterator<list> it4 = our_stack.iterator();
+            
+            while( it4.hasNext() )      //traverse through list from old->new
+            {
+                // donna
+                //list testing = new list();
+                //testing = our_stack.peek();
+                //System.err.println( "In assignment(): "+testing.block_list);
+                checking3 = it4.next();
+                
+                if( checking3.block_list.contains( tok.string ) )
+                {
+                    z = 1; //True, it's within the stack
+                }
+            }//while()
+            
+            // donna
+            //  System.out.println( "Checking number if " + tok.string + " exists " + in);
+            
+            if(z == 0)
+            {
+                System.err.println( "undeclared variable "+ tok.string +  " on line "+ tok.lineNumber);
+                System.exit(1);
+                
+
+            }}
         expression();
     }
     
@@ -182,8 +263,42 @@ public class Parser {
 // fa::= fa id':=' expression to expression [st expression] commands af
     private void fa()
     {
+        list checks = new list();
+        int inside = 0;
         mustbe(TK.FA);
-        mustbe(TK.ID);
+        // donna
+        // this is type fa inside the text file qq
+         //System.err.println( "If this prints, it's at fa" + tok.lineNumber);
+        if( is(TK.ID) )
+        {
+            Iterator<list> it3 = our_stack.iterator();
+            
+            while( it3.hasNext() )      //traverse through list from old->new
+            {
+                checks = it3.next();
+                
+                if( checks.block_list.contains( tok.string ) )
+                {
+                    inside = 1; //True, it's within the stack
+                }
+            }//while()
+            
+
+            if(inside == 0)
+            {
+                System.err.println( "undeclared variable "+ tok.string +  " on line "+ tok.lineNumber);
+                System.exit(1);
+                
+                
+            }//not within, must be undeclared
+            
+            
+            mustbe(TK.ID);
+            //scan();
+        }
+
+        // donna
+         //System.err.println( "right before assign " + tok.lineNumber);
         mustbe(TK.ASSIGN);
         expression();
         
@@ -242,6 +357,8 @@ public class Parser {
 //  expression:: = simple [relop simple]
     private void expression()
     {
+        
+
         simple();
         
         if( is(TK.EQ) || is(TK.LT) ||  is(TK.GT) || is(TK.NE) || is(TK.LE) || is(TK.GE) )
